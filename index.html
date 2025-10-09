@@ -43,6 +43,7 @@
         display: flex;
         gap: 20px;
         align-items: flex-start;
+        flex-wrap: wrap;
       }
       section {
         background: var(--card);
@@ -50,6 +51,7 @@
         border-radius: 8px;
         box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
         flex: 1;
+        min-width: 300px;
       }
       table {
         width: 100%;
@@ -152,6 +154,17 @@
         border: 1px solid #ccc;
         width: 250px;
       }
+      @media (max-width: 768px) {
+        table {
+          font-size: 12px;
+        }
+        input[type="number"] {
+          width: 70px;
+        }
+        .results p {
+          font-size: 13px;
+        }
+      }
       @media print {
         body {
           background: white;
@@ -176,9 +189,8 @@
     <h1>Biogas Plant Calculator</h1>
 
     <p class="small">
-      Edit the yellow/green inputs for each feedstock. Click
-      <strong>Calculate</strong> to see results. Click
-      <strong>Generate Report</strong> to view the blue report.
+      Edit the yellow/green inputs for each feedstock. The results update
+      automatically.
     </p>
 
     <div class="cols">
@@ -205,410 +217,147 @@
           </thead>
           <tbody id="calc-body"></tbody>
         </table>
+
         <div class="controls">
-          <button id="calculateBtn">Calculate</button>
-          <button id="generateReportBtn" class="secondary">
-            Generate Report
-          </button>
+          <button id="generateReportBtn" class="secondary">Generate Report</button>
           <button id="resetBtn" class="secondary">Reset defaults</button>
         </div>
-        <!-- Email Report Feature -->
-        <!-- <div class="email-section no-print">
-        <input type="email" id="emailInput" placeholder="Enter your email address">
-        <button id="sendEmailBtn">Send Report to Email</button>
-    </div>   -->
 
-        <div class="results" id="quick-results">
-          <h2>Adjustable Factors</h2>
-          <div style="margin-bottom: 8px">
-            <label class="small muted"
-              >Biogas factor (Nm³ per ton VS reduced):</label
-            ><br />
-            <input id="biogasFactor" type="number" value="788" step="1" />
-          </div>
-          <div style="margin-bottom: 8px">
-            <label class="small muted">Engine factor (kg output per Nm³):</label
-            ><br />
-            <input id="engineFactor" type="number" value="0.475" step="0.001" />
-          </div>
-          <div style="margin-bottom: 8px">
-            <label class="small muted"
-              >Storage liters per ton (for cascade calc):</label
-            ><br />
-            <input id="storagePerTon" type="number" value="400" step="1" />
-          </div>
-        </div>
-        <div class="results" id="quick-results">
+        <div class="results" id="quick-totals">
           <h3>Quick Totals</h3>
-          <p>
-            <strong>Total Raw Material (TPD):</strong>
-            <span id="sum-supply">-</span>
-          </p>
-          <p>
-            <strong>Total Biogas (Nm³/day):</strong>
-            <span id="sum-biogas">-</span>
-          </p>
-          <p>
-            <strong>Total Cost /day (INR):</strong> <span id="sum-cost">-</span>
-          </p>
+          <p><strong>Total Raw Material (TPD):</strong> <span id="sum-supply">-</span></p>
+          <p><strong>Total Biogas (Nm³/day):</strong> <span id="sum-biogas">-</span></p>
+        </div>
+
+        <div class="results" id="capacity-summary">
+          <h3>Plant Capacity Summary</h3>
+          <p><strong>Total Working Capacity (TPD):</strong> <span id="working-capacity">-</span></p>
+          <p><strong>Highest Rated Capacity (TPD):</strong> <span id="rated-capacity">-</span></p>
+        </div>
+
+        <!-- ✅ Report Area -->
+        <div id="reportArea" class="report-area">
+          <div class="print-header">
+            <h2>Biogas Plant Report</h2>
+            <span class="muted">Generated on <span id="reportDate"></span></span>
+          </div>
+          <div id="reportContent"></div>
         </div>
       </section>
     </div>
 
-    <!-- Report Area -->
-    <div class="report-area" id="reportArea">
-      <div class="print-header">
-        <div>
-          <h2 style="margin: 0">Biogas Plant Report</h2>
-          <div class="muted">Generated: <span id="reportDate"></span></div>
-        </div>
-      </div>
-
-      <div
-        style="
-          border: 1px solid #eee;
-          padding: 12px;
-          background: #eaf3ff;
-          border-radius: 6px;
-        "
-      >
-        <div class="summary-grid" id="reportGrid"></div>
-      </div>
-
-      <h3 style="margin-top: 12px">Per-material Breakdown</h3>
-      <div style="overflow: auto">
-        <table id="reportTable" style="width: 100%; font-size: 13px">
-          <thead>
-            <tr>
-              <th>Feedstock</th>
-              <th>Total Raw Material / Tons per Day (TPD)</th>
-              <th>TS (TPD)</th>
-              <th>VS (TPD)</th>
-              <th>VS Reduced (TPD)</th>
-              <th>Biogas (Nm³/day)</th>
-              <th>Methane %</th>
-              <th>Cost/day (INR)</th>
-            </tr>
-          </thead>
-          <tbody id="reportBody"></tbody>
-        </table>
-        <!-- <div class="controls">
-          <button id="calculateBtn">Calculate</button>
-          <button id="generateReportBtn" class="secondary">
-            Generate Report
-          </button>
-          <button id="resetBtn" class="secondary">Reset defaults</button>
-        </div> -->
-      </div>
-    </div>
-
     <script>
-      /* ---------- Existing Calculation Logic ---------- */
-      /* (unchanged except for added email sending logic) */
+      const calcBody = document.getElementById("calc-body");
+      function num(v) { const n = parseFloat(v); return isFinite(n) ? n : 0; }
 
       const defaults = [
-        {
-          name: "Napier Grass",
-          ts: 28,
-          vs: 88,
-          degr: 75,
-          supply: 0,
-          methanePct: 5.69,
-          rate: 1000,
-          transport: 300,
-        },
-        {
-          name: "Cattle Dung",
-          ts: 28,
-          vs: 80,
-          degr: 45,
-          supply: 0,
-          methanePct: 3.1,
-          rate: 500,
-          transport: 300,
-        },
-        {
-          name: "Press Mud",
-          ts: 23,
-          vs: 75,
-          degr: 80,
-          supply: 0,
-          methanePct: 4.25,
-          rate: 500,
-          transport: 500,
-        },
-        {
-          name: "Poultry Waste",
-          ts: 35,
-          vs: 72,
-          degr: 68,
-          supply: 0,
-          methanePct: 5.27,
-          rate: 1000,
-          transport: 500,
-        },
-        {
-          name: "Corn Straw",
-          ts: 80,
-          vs: 86,
-          degr: 55,
-          supply: 0,
-          methanePct: 11.64,
-          rate: 2000,
-          transport: 500,
-        },
-        {
-          name: "Sugarcane Leaves",
-          ts: 88,
-          vs: 84,
-          degr: 53,
-          supply: 0,
-          methanePct: 12.05,
-          rate: 1500,
-          transport: 500,
-        },
-        {
-          name: "Paddy Straw",
-          ts: 80,
-          vs: 85,
-          degr: 53,
-          supply: 0,
-          methanePct: 11.09,
-          rate: 2500,
-          transport: 500,
-        },
-        {
-          name: "Maize Stalk",
-          ts: 80,
-          vs: 86,
-          degr: 56,
-          supply: 0,
-          methanePct: 11.85,
-          rate: 2000,
-          transport: 500,
-        },
-        {
-          name: "Wheat Straw",
-          ts: 85,
-          vs: 84,
-          degr: 55,
-          supply: 0,
-          methanePct: 12.08,
-          rate: 2500,
-          transport: 500,
-        },
-        {
-          name: "Spent Wash",
-          ts: 5,
-          vs: 87,
-          degr: 90,
-          supply: 0,
-          methanePct: 1.2,
-          rate: 200,
-          transport: 200,
-        },
-        {
-          name: "Municipal Solid Waste",
-          ts: 45,
-          vs: 55,
-          degr: 55,
-          supply: 0,
-          methanePct: 4.19,
-          rate: 1000,
-          transport: 500,
-        },
+        { name: "Napier Grass", ts: 28, vs: 88, degr: 75, supply: 0, methanePct: 5.69, rate: 1000, transport: 300 },
+        { name: "Cattle Dung", ts: 28, vs: 80, degr: 45, supply: 0, methanePct: 3.1, rate: 500, transport: 300 },
+        { name: "Press Mud", ts: 23, vs: 75, degr: 80, supply: 0, methanePct: 4.25, rate: 500, transport: 500 },
+        { name: "Poultry Waste", ts: 35, vs: 72, degr: 68, supply: 0, methanePct: 5.27, rate: 1000, transport: 500 },
+        { name: "Corn Straw", ts: 80, vs: 86, degr: 55, supply: 0, methanePct: 11.64, rate: 2000, transport: 500 },
+        { name: "Sugarcane Leaves", ts: 88, vs: 84, degr: 53, supply: 0, methanePct: 12.05, rate: 1500, transport: 500 },
+        { name: "Paddy Straw", ts: 80, vs: 85, degr: 53, supply: 0, methanePct: 11.09, rate: 2500, transport: 500 },
+        { name: "Maize Stalk", ts: 80, vs: 86, degr: 56, supply: 0, methanePct: 11.85, rate: 2000, transport: 500 },
+        { name: "Wheat Straw", ts: 85, vs: 84, degr: 55, supply: 0, methanePct: 12.08, rate: 2500, transport: 500 },
+        { name: "Spent Wash", ts: 5, vs: 87, degr: 90, supply: 0, methanePct: 1.2, rate: 200, transport: 200 },
+        { name: "Municipal Solid Waste", ts: 45, vs: 55, degr: 55, supply: 0, methanePct: 4.19, rate: 1000, transport: 500 },
       ];
 
-      const calcBody = document.getElementById("calc-body");
-      function num(v) {
-        const n = parseFloat(v);
-        return isFinite(n) ? n : 0;
-      }
-      function createRow(item, i) {
+      function createRow(item) {
         const tr = document.createElement("tr");
         tr.innerHTML = `
-    <td style="text-align:left">${item.name}</td>
-    <td><input type="number" class="yellow" data-field="ts" value="${item.ts}"></td>
-    <td><input type="number" class="yellow" data-field="vs" value="${item.vs}"></td>
-    <td><input type="number" class="yellow" data-field="degr" value="${item.degr}"></td>
-    <td><input type="number" class="green" data-field="supply" value="${item.supply}"></td>
-    <td data-out="ts_tpd">-</td>
-    <td data-out="vs_tpd">-</td>
-    <td data-out="vs_red">-</td>
-    <td data-out="biogas">-</td>
-    <td><input type="number" data-field="methane" value="${item.methanePct}"></td>
-    <td><input type="number" data-field="rate" value="${item.rate}"></td>
-    <td><input type="number" data-field="transport" value="${item.transport}"></td>
-    <td data-out="cost_day">-</td>`;
+          <td style="text-align:left">${item.name}</td>
+          <td><input type="number" class="yellow" data-field="ts" value="${item.ts}"></td>
+          <td><input type="number" class="yellow" data-field="vs" value="${item.vs}"></td>
+          <td><input type="number" class="yellow" data-field="degr" value="${item.degr}"></td>
+          <td><input type="number" class="green" data-field="supply" value="${item.supply}"></td>
+          <td data-out="ts_tpd">-</td>
+          <td data-out="vs_tpd">-</td>
+          <td data-out="vs_red">-</td>
+          <td data-out="biogas">-</td>
+          <td><input type="number" data-field="methane" value="${item.methanePct}"></td>
+          <td><input type="number" data-field="rate" value="${item.rate}"></td>
+          <td><input type="number" data-field="transport" value="${item.transport}"></td>
+          <td data-out="cost_day">-</td>`;
         return tr;
       }
+
       function loadTable() {
         calcBody.innerHTML = "";
-        defaults.forEach((d, i) => calcBody.appendChild(createRow(d, i)));
+        defaults.forEach(d => calcBody.appendChild(createRow(d)));
+        attachAutoUpdate();
       }
+
       function calculateAll() {
-        const bf = num(document.getElementById("biogasFactor").value);
-        const ef = num(document.getElementById("engineFactor").value);
-        const sf = num(document.getElementById("storagePerTon").value);
+        const bf = 788;
         const rows = [...calcBody.querySelectorAll("tr")];
-        let sumSupply = 0,
-          sumTS = 0,
-          sumVS = 0,
-          sumVSRed = 0,
-          sumBiogas = 0,
-          sumCost = 0,
-          wmn = 0,
-          wmd = 0;
-        rows.forEach((r) => {
+        let sumSupply = 0, sumBiogas = 0, wmn = 0, wmd = 0;
+
+        rows.forEach(r => {
           const ts = num(r.querySelector('[data-field="ts"]').value);
           const vs = num(r.querySelector('[data-field="vs"]').value);
           const degr = num(r.querySelector('[data-field="degr"]').value);
           const supply = num(r.querySelector('[data-field="supply"]').value);
           const methane = num(r.querySelector('[data-field="methane"]').value);
           const rate = num(r.querySelector('[data-field="rate"]').value);
-          const transport = num(
-            r.querySelector('[data-field="transport"]').value
-          );
+          const transport = num(r.querySelector('[data-field="transport"]').value);
           const ts_tpd = supply * (ts / 100);
           const vs_tpd = ts_tpd * (vs / 100);
           const vs_red = vs_tpd * (degr / 100);
           const biogas = vs_red * bf;
           const cost_day = supply * (rate + transport);
-          r.querySelector('[data-out="ts_tpd"]').textContent =
-            ts_tpd.toFixed(2) + " TPD";
-          r.querySelector('[data-out="vs_tpd"]').textContent =
-            vs_tpd.toFixed(2) + " TPD";
-          r.querySelector('[data-out="vs_red"]').textContent =
-            vs_red.toFixed(2) + " TPD";
-          r.querySelector('[data-out="biogas"]').textContent =
-            biogas.toFixed(2) + " Nm³/day";
-          r.querySelector('[data-out="cost_day"]').textContent =
-            "INR " + cost_day.toFixed(2);
+          r.querySelector('[data-out="ts_tpd"]').textContent = ts_tpd.toFixed(2) + " TPD";
+          r.querySelector('[data-out="vs_tpd"]').textContent = vs_tpd.toFixed(2) + " TPD";
+          r.querySelector('[data-out="vs_red"]').textContent = vs_red.toFixed(2) + " TPD";
+          r.querySelector('[data-out="biogas"]').textContent = biogas.toFixed(2) + " Nm³/day";
+          r.querySelector('[data-out="cost_day"]').textContent = "INR " + cost_day.toFixed(2);
           sumSupply += supply;
-          sumTS += ts_tpd;
-          sumVS += vs_tpd;
-          sumVSRed += vs_red;
           sumBiogas += biogas;
-          sumCost += cost_day;
           wmn += methane * vs_red;
           wmd += vs_red;
         });
-        document.getElementById("sum-supply").textContent =
-          sumSupply.toFixed(2) + " TPD";
-        //        document.getElementById("sum-ts").textContent =
-        //          sumTS.toFixed(2) + " TPD";
-        //        document.getElementById("sum-vs").textContent =
-        //          sumVS.toFixed(2) + " TPD";
-        //        document.getElementById("sum-vsred").textContent =
-        //          sumVSRed.toFixed(2) + " TPD";
-        document.getElementById("sum-biogas").textContent =
-          sumBiogas.toFixed(2) + " Nm³/day";
-        document.getElementById("sum-cost").textContent =
-          "INR " + sumCost.toFixed(2);
-        window.latestSummary = {
-          sumSupply,
-          sumTS,
-          sumVS,
-          sumVSRed,
-          sumBiogas,
-          sumCost,
-          bf,
-          ef,
-          sf,
-          methane: wmd ? wmn / wmd : 0,
-        };
+
+        const methaneYield = wmd ? (wmn / wmd) : 0;
+        const totalWorkingCapacity = sumSupply * (methaneYield / 100);
+        const highestRatedCapacity = totalWorkingCapacity / 0.8;
+
+        document.getElementById("sum-supply").textContent = sumSupply.toFixed(2) + " TPD";
+        document.getElementById("sum-biogas").textContent = sumBiogas.toFixed(2) + " Nm³/day";
+        document.getElementById("working-capacity").textContent = totalWorkingCapacity.toFixed(2) + " TPD";
+        document.getElementById("rated-capacity").textContent = highestRatedCapacity.toFixed(2) + " TPD";
+
+        return { sumSupply, sumBiogas, totalWorkingCapacity, highestRatedCapacity };
       }
-      function populateReport() {
-        calculateAll();
-        const s = window.latestSummary;
-        const grid = document.getElementById("reportGrid");
-        const body = document.getElementById("reportBody");
-        grid.innerHTML = "";
-        body.innerHTML = "";
-        const add = (k, v) => {
-          const d = document.createElement("div");
-          d.style.display = "flex";
-          d.style.justifyContent = "space-between";
-          d.innerHTML = `<strong>${k}</strong><div>${v}</div>`;
-          grid.appendChild(d);
-        };
-        add("Raw Material Quantity", s.sumSupply.toFixed(2) + " TPD");
-      //  add("Total Solid Content", s.sumTS.toFixed(2) + " TPD");
-      //  add("Total Volatile Solids", s.sumVS.toFixed(2) + " TPD");
-      //  add("Total VS Reduced", s.sumVSRed.toFixed(2) + " TPD");
-        add("Total Raw Biogas Production", s.sumBiogas.toFixed(2) + " Nm³/day");
-        add("Proportional Methane Yield %", s.methane.toFixed(2) + "%");
-        add("Total Cost /day", "INR " + s.sumCost.toFixed(2));
-        document.getElementById("reportDate").textContent =
-          new Date().toLocaleString();
-        const rows = [...calcBody.querySelectorAll("tr")];
-        rows.forEach((r) => {
-          const tr = document.createElement("tr");
-          const name = r.cells[0].innerText;
-          const sup = r.querySelector('[data-field="supply"]').value;
-          tr.innerHTML = `<td>${name}</td><td>${sup}</td><td>${
-            r.querySelector('[data-out="ts_tpd"]').textContent
-          }</td><td>${
-            r.querySelector('[data-out="vs_tpd"]').textContent
-          }</td><td>${
-            r.querySelector('[data-out="vs_red"]').textContent
-          }</td><td>${
-            r.querySelector('[data-out="biogas"]').textContent
-          }</td><td>${
-            r.querySelector('[data-field="methane"]').value
-          }%</td><td>${
-            r.querySelector('[data-out="cost_day"]').textContent
-          }</td>`;
-          body.appendChild(tr);
+
+      function attachAutoUpdate() {
+        document.querySelectorAll("input").forEach(inp => {
+          inp.addEventListener("input", calculateAll);
         });
-        document.getElementById("reportArea").style.display = "block";
-        document
-          .getElementById("reportArea")
-          .scrollIntoView({ behavior: "smooth" });
       }
 
-      /* Email Sending Logic */
-      //document.getElementById('sendEmailBtn').onclick = async () => {
-      //  populateReport(); // make sure report is generated
-      //  const email = document.getElementById('emailInput').value.trim();
-      //  if (!email) return alert("Please enter a valid email address.");
-      //
-      //  const reportHtml = document.getElementById('reportArea').innerHTML;
-      //
-      //  // Example: Send to backend mail API
-      //  try {
-      //    const response = await fetch("https://your-backend-endpoint/sendReport", {
-      //      method: "POST",
-      //      headers: {"Content-Type": "application/json"},
-      //      body: JSON.stringify({
-      //        to: email,
-      //        from: "Anirudh@Finsenritter.com",
-      //        subject: "Your Biogas Plant Report",
-      //        html: reportHtml
-      //      })
-      //    });
-      //    if (response.ok) {
-      //      alert("Report has been emailed successfully!");
-      //    } else {
-      //      alert("Failed to send email. Please check the server setup.");
-      //    }
-      //  } catch (err) {
-      //    console.error(err);
-      //    alert("Error sending email. Please try again.");
-      //  }
-      //};
-
-      document.getElementById("calculateBtn").onclick = calculateAll;
+      // ✅ FIX: Working Generate Report Button
       document.getElementById("generateReportBtn").onclick = () => {
-        populateReport();
-        if (confirm("Report prepared. Print now?")) window.print();
+        const result = calculateAll();
+        const report = document.getElementById("reportArea");
+        const reportContent = document.getElementById("reportContent");
+        const date = new Date().toLocaleString();
+        document.getElementById("reportDate").textContent = date;
+
+        reportContent.innerHTML = `
+          <p><strong>Total Raw Material (TPD):</strong> ${result.sumSupply.toFixed(2)}</p>
+          <p><strong>Total Biogas (Nm³/day):</strong> ${result.sumBiogas.toFixed(2)}</p>
+          <p><strong>Total Working Capacity (TPD):</strong> ${result.totalWorkingCapacity.toFixed(2)}</p>
+          <p><strong>Highest Rated Capacity (TPD):</strong> ${result.highestRatedCapacity.toFixed(2)}</p>
+        `;
+        report.style.display = "block";
+
+        // Open print dialog for PDF/print
+        window.print();
       };
-      document.getElementById("resetBtn").onclick = () => {
-        if (confirm("Reset all inputs?")) {
-          loadTable();
-          calculateAll();
-        }
-      };
+
+      document.getElementById("resetBtn").onclick = () => { loadTable(); calculateAll(); };
+
       loadTable();
       calculateAll();
     </script>
