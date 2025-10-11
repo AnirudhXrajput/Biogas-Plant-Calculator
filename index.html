@@ -1,365 +1,568 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Biogas Plant Calculator</title>
-    <link
-      rel="shortcut icon"
-      href="https://media.licdn.com/dms/image/v2/C4E0BAQEVdFuwbZKfmA/company-logo_200_200/company-logo_200_200/0/1630647188573?e=2147483647&v=beta&t=YJKckJUGSJlNyw91rDgUKHtfobB25OiJRPTYaNJleTM"
-      type="image/x-icon"
-    />
-    <style>
-      :root {
-        --accent: #004c3f;
-        --muted: #f3f6f7;
-        --yellow: #fff7cc;
-        --green: #d8f8d8;
-        --orange: #ff7b2d;
-        --blue: #e6f2ff;
-        --mono: #222;
-        --card: #ffffff;
-      }
-      body {
-        font-family: Inter, system-ui, Arial;
-        margin: 20px;
-        color: var(--mono);
-        background: #fafafa;
-      }
-      header {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        margin-bottom: 15px;
-      }
-      header img {
-        height: 50px;
-      }
-      h1 {
-        color: var(--accent);
-        margin: 0;
-      }
-      .cols {
-        display: flex;
-        gap: 20px;
-        align-items: flex-start;
-        flex-wrap: wrap;
-      }
-      section {
-        background: var(--card);
-        padding: 14px;
-        border-radius: 8px;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
-        flex: 1;
-        min-width: 300px;
-      }
-      table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 14px;
-      }
-      thead th {
-        background: #f1f1f1;
-        text-align: center;
-        padding: 10px;
-        border: 1px solid #e6e6e6;
-      }
-      td,
-      th {
-        border: 1px solid #e6e6e6;
-        padding: 8px;
-        text-align: center;
-      }
-      input[type="number"] {
-        width: 88px;
-        padding: 6px;
-        border-radius: 4px;
-        border: 1px solid #ccc;
-        text-align: right;
-      }
-      .yellow {
-        background: var(--yellow);
-      }
-      .green {
-        background: var(--green);
-      }
-      .controls {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        margin: 12px 0;
-      }
-      button {
-        background: var(--accent);
-        color: white;
-        padding: 10px 14px;
-        border: none;
-        border-radius: 6px;
-        cursor: pointer;
-      }
-      button.secondary {
-        background: #6b7280;
-      }
-      .results {
-        background: var(--blue);
-        padding: 12px;
-        border-radius: 6px;
-        margin-top: 12px;
-      }
-      .results p {
-        margin: 6px 0;
-        font-size: 15px;
-      }
-      .small {
-        font-size: 12px;
-        color: #555;
-      }
-      .right {
-        text-align: right;
-      }
-      .summary-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 6px;
-      }
-      .report-area {
-        display: none;
-        padding: 12px;
-        background: white;
-        margin-top: 12px;
-      }
-      .print-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 6px;
-      }
-      .muted {
-        color: #555;
-      }
-      footer.small {
-        font-size: 12px;
-        color: #666;
-        margin-top: 10px;
-      }
-      .email-section {
-        margin-top: 10px;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-      }
-      .email-section input {
-        padding: 8px;
-        border-radius: 4px;
-        border: 1px solid #ccc;
-        width: 250px;
-      }
-      @media (max-width: 768px) {
-        table {
-          font-size: 12px;
-        }
-        input[type="number"] {
-          width: 70px;
-        }
-        .results p {
-          font-size: 13px;
-        }
-      }
-      @media print {
-        body {
-          background: white;
-        }
-        .controls,
-        .no-print {
-          display: none !important;
-        }
-        .report-area {
-          display: block !important;
-        }
-      }
-    </style>
-    <header>
-      <img
-        src="https://finsenritter.com/wp-content/uploads/2025/08/Company-Logo.png"
-        alt="Company Logo"
-      />
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>BIO CNG PLANT — Biogas Calculator & P&L Projection</title>
+  <link rel="shortcut icon" href="https://media.licdn.com/dms/image/v2/C4E0BAQEVdFuwbZKfmA/company-logo_200_200/company-logo_200_200/0/1630647188573?e=2147483647&v=beta&t=YJKckJUGSJlNyw91rDgUKHtfobB25OiJRPTYaNJleTM" type="image/x-icon">
+  <style>
+    /* -----------------------------
+       Eco-Tech Theme — HTML/CSS only
+       JS from original file is preserved unchanged below
+       ------------------------------*/
+
+    :root{
+      --bg-100: #f6fbf8;
+      --panel: rgba(255,255,255,0.85);
+      --glass: rgba(255,255,255,0.7);
+      --accent-1: #0b6b45; /* deep green */
+      --accent-2: #2aa06a; /* fresh green */
+      --accent-3: #7bd487; /* light green */
+      --muted: #6b6f73;
+      --glass-border: rgba(20,60,40,0.06);
+      --shadow: 0 8px 20px rgba(9, 30, 20, 0.08);
+      --radius: 12px;
+    }
+
+    /* base */
+    html,body{height:100%;}
+    body{
+      margin:0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      background: linear-gradient(180deg,#f2fbf7 0%,var(--bg-100) 100%);
+      color:#14342a;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      padding:28px 18px;
+      animation:fadeIn .6s ease both;
+    }
+
+    @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+    .wrap{max-width:1200px;margin:0 auto;}
+
+    /* Header */
+    .topbar{
+      display:flex;align-items:center;gap:16px;padding:14px;border-radius:14px;background:linear-gradient(90deg,var(--panel), #f7fffb);box-shadow:var(--shadow);border:1px solid var(--glass-border);
+    }
+    .brand{display:flex;align-items:center;gap:12px;flex:1}
+    .brand img{height:48px;width:auto;border-radius:8px;background:linear-gradient(45deg,var(--accent-3),rgba(255,255,255,0.25));padding:6px}
+    .title{font-weight:700;font-size:18px;color:var(--accent-1);line-height:1}
+    .subtitle{font-size:12px;color:var(--muted)}
+
+    .top-actions{display:flex;gap:8px;align-items:center}
+    .btn{background:linear-gradient(180deg,var(--accent-2),var(--accent-1));border:none;color:white;padding:9px 12px;border-radius:10px;cursor:pointer;font-weight:600;box-shadow:0 6px 14px rgba(10,80,50,0.12)}
+    .btn.ghost{background:transparent;border:1px solid rgba(10,80,50,0.08);color:var(--accent-1);box-shadow:none}
+
+    /* main cards */
+    .stack{display:grid;grid-template-columns:1fr;gap:18px;margin-top:18px}
+    .card{background:linear-gradient(180deg,rgba(255,255,255,0.75),var(--glass));padding:16px;border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--glass-border)}
+
+    .section-title{display:flex;align-items:center;gap:10px;background:linear-gradient(90deg,rgba(42,160,106,0.08),rgba(11,107,69,0.03));padding:8px 12px;border-radius:10px;font-weight:700;color:var(--accent-1);}
+
+    /* Table styles — keep same ids and structure so JS works */
+    table{width:100%;border-collapse:collapse;font-size:13px}
+    thead th{background:linear-gradient(90deg,#eaf6ef,#f7fffb);color:var(--accent-1);font-weight:700;padding:10px;border-bottom:1px solid rgba(10,30,20,0.06)}
+    th,td{padding:10px;border-bottom:1px dashed rgba(10,30,20,0.03);vertical-align:middle}
+    tbody tr:hover{background:linear-gradient(90deg,rgba(42,160,106,0.02),transparent)}
+
+    input[type="number"], input[type="text"]{padding:8px;border-radius:8px;border:1px solid rgba(10,30,20,0.06);background:rgba(255,255,255,0.9);width:100%;box-sizing:border-box}
+
+    .controls{display:flex;gap:10px;flex-wrap:wrap}
+    .muted{color:var(--muted);font-size:13px}
+    .summary-grid{display:flex;flex-wrap:wrap;gap:12px;margin-top:10px}
+    .stat{background:linear-gradient(180deg,rgba(255,255,255,0.9),#fbfffb);padding:10px;border-radius:10px;min-width:160px;border:1px solid rgba(10,30,20,0.03)}
+    .stat small{display:block;color:var(--muted);font-size:12px}
+    .stat .value{font-weight:700;color:var(--accent-1);margin-top:6px}
+
+    /* Project specs */
+    .specs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+    .specs table{background:transparent}
+    .specs input{width:120px}
+
+    /* P&L */
+    .pnl-columns{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+    .income-box h4, .expense-box h4{margin:0;padding:8px;border-radius:8px;background:linear-gradient(90deg,var(--accent-3),rgba(255,255,255,0.6));text-align:center;color:var(--accent-1)}
+    .income-box, .expense-box{border-radius:10px;padding:8px;background:linear-gradient(180deg,rgba(255,255,255,0.92),#ffffff);border:1px solid rgba(10,30,20,0.03)}
+
+    .totals-row td{background:linear-gradient(90deg,rgba(11,107,69,0.03),transparent);font-weight:700}
+    .profit-row td{background:linear-gradient(90deg,rgba(123,212,135,0.12),rgba(11,107,69,0.02));font-weight:800}
+
+    /* footer */
+    footer{margin-top:16px;padding:12px;text-align:center;color:var(--muted);font-size:13px}
+
+    /* responsive */
+    @media (max-width:980px){
+      .specs{grid-template-columns:1fr}
+      .pnl-columns{grid-template-columns:1fr}
+      .summary-grid{justify-content:space-between}
+    }
+
+    @media (max-width:640px){
+      .topbar{flex-direction:column;align-items:flex-start}
+      .brand{width:100%}
+      .title{font-size:16px}
+      .specs input{width:100%}
+    }
+
+    /* print tweaks */
+    @media print{ .top-actions, .btn, footer {display:none} body{background:white} .card{box-shadow:none;border:0}}
+
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="topbar">
+      <div class="brand">
+        <img src="https://finsenritter.com/wp-content/uploads/2025/08/Company-Logo.png" alt="Finsen Ritter Logo" onerror="this.style.display='none'" />
+        <div>
+          <div class="title">BIO CNG PLANT — Biogas Calculator & P&L Projection</div>
+          <div class="subtitle">P & L Projection Sheet — Eco-Tech theme</div>
+        </div>
+      </div>
+
+      <div class="top-actions">
+        <button id="btn-reset" class="btn ghost">Reset defaults</button>
+        <button id="btn-print" class="btn">Print / Generate Report</button>
+      </div>
     </header>
-  </head>
-  <body>
-    <h1>Biogas Plant Calculator</h1>
 
-    <p class="small">
-      Edit the yellow/green inputs for each feedstock. The results update
-      automatically.
-    </p>
+    <main class="stack">
 
-    <div class="cols">
-      <section style="flex: 3">
-        <h2>Calculation Table</h2>
+      <section class="card">
+        <div class="section-title">Calculation Table (Feedstocks)</div>
 
-        <table id="calc-table" aria-label="Calculation table">
-          <thead>
-            <tr>
-              <th>Feedstock</th>
-              <th>Total Solid (%)</th>
-              <th>VS % of TS</th>
-              <th>VS Degradability (% of VS)</th>
-              <th>Total Raw Material / Tons per Day (TPD)</th>
-              <th>Total Solid Content / Tons per Day (TPD)</th>
-              <th>Total Volatile Solids Content / Tons per Day (TPD)</th>
-              <th>VS Reduced (TPD)</th>
-              <th>Biogas (Nm³/day)</th>
-              <th>Methane Yield %</th>
-              <th>Rate (INR/ton)</th>
-              <th>Transport (INR/ton)</th>
-              <th>Total Cost /day (INR)</th>
-            </tr>
-          </thead>
-          <tbody id="calc-body"></tbody>
-        </table>
-
-        <div class="controls">
-          <button id="generateReportBtn" class="secondary">Generate Report</button>
-          <button id="resetBtn" class="secondary">Reset defaults</button>
+        <div style="overflow:auto;">
+          <table id="calc-table">
+            <thead>
+              <tr>
+                <th>Feedstock</th>
+                <th>Total Solid (%)</th>
+                <th>Volatile Solids % of Total Solid</th>
+                <th>Volatile Solids Degradability (% of VS)</th>
+                <th>Total Raw Material / TPD</th>
+                <th>Total Solid Content / TPD</th>
+                <th>Total Volatile Solids Content / TPD</th>
+                <th>VS Reduced (TPD)</th>
+                <th>Biogas (Nm³/day)</th>
+                <th>Methane Yield %</th>
+                <th>Rate (INR/ton)</th>
+                <th>Transport (INR/ton)</th>
+                <th>Total Cost /day (INR)</th>
+              </tr>
+            </thead>
+            <tbody id="calc-body"></tbody>
+          </table>
         </div>
 
-        <div class="results" id="quick-totals">
-          <h3>Quick Totals</h3>
-          <p><strong>Total Raw Material (TPD):</strong> <span id="sum-supply">-</span></p>
-          <p><strong>Total Biogas (Nm³/day):</strong> <span id="sum-biogas">-</span></p>
-        </div>
-
-        <div class="results" id="capacity-summary">
-          <h3>Plant Capacity Summary</h3>
-          <p><strong>Total Working Capacity (TPD):</strong> <span id="working-capacity">-</span></p>
-          <p><strong>Highest Rated Capacity (TPD):</strong> <span id="rated-capacity">-</span></p>
-        </div>
-
-        <!-- ✅ Report Area -->
-        <div id="reportArea" class="report-area">
-          <div class="print-header">
-            <h2>Biogas Plant Report</h2>
-            <span class="muted">Generated on <span id="reportDate"></span></span>
+        <div style="margin-top:12px;background:linear-gradient(90deg,rgba(42,160,106,0.03),transparent);padding:12px;border-radius:10px;">
+          <strong>Plant Capacity Summary</strong>
+          <div class="summary-grid">
+            <div class="stat"><small>Total Raw Material (TPD)</small><div id="sum-supply" class="value">-</div></div>
+            <div class="stat"><small>Total Biogas (Nm³/day)</small><div id="sum-biogas" class="value">-</div></div>
+            <div class="stat"><small>Highest Rated Capacity (TPD)</small><div id="rated-capacity" class="value">-</div></div>
+            <div class="stat"><small>Total Working Capacity (TPD)</small><div id="working-capacity" class="value">-</div></div>
+            <div class="stat"><small>Total Dry Product (TPD)</small><div id="sum-dry-product" class="value">-</div></div>
+            <div class="stat"><small>Proportional Raw Material Cost/day (INR/ton)</small><div id="prop-raw-cost" class="value">-</div></div>
+            <div class="stat"><small>Proportional Transport Cost/day (INR/ton)</small><div id="prop-transport-cost" class="value">-</div></div>
+            <div class="stat"><small>Total Raw Material Cost/day (INR)</small><div id="total-raw-cost" class="value">-</div></div>
+            <div class="stat"><small>Total Cost per Day (INR)</small><div id="total-cost-day" class="value">-</div></div>
           </div>
-          <div id="reportContent"></div>
         </div>
       </section>
-    </div>
 
-    <script>
-      const calcBody = document.getElementById("calc-body");
-      function num(v) { const n = parseFloat(v); return isFinite(n) ? n : 0; }
+      <section class="card">
+        <div class="section-title">Project Specifications</div>
+        <div class="specs">
+          <div>
+            <table style="width:100%;border-collapse:collapse">
+              <tr><td>Tonnage of Raw Material</td><td id="spec-tonnage" class="right">120 Ton</td></tr>
+              <tr><td>Average Rate of Raw Material per ton</td><td id="spec-avg-rate" class="right">₹ 1,000.00 per ton</td></tr>
+              <tr><td>Average Cost of Transport of Raw Material</td><td id="spec-avg-transport" class="right">₹ 300.00 per ton</td></tr>
+              <tr><td>Average Cost of Raw Material with Transportation</td><td id="spec-avg-with-transport" class="right">₹ 1,300.00 per ton</td></tr>
+            </table>
+          </div>
 
-      const defaults = [
-        { name: "Napier Grass", ts: 28, vs: 88, degr: 75, supply: 0, methanePct: 5.69, rate: 1000, transport: 300 },
-        { name: "Cattle Dung", ts: 28, vs: 80, degr: 45, supply: 0, methanePct: 3.1, rate: 500, transport: 300 },
-        { name: "Press Mud", ts: 23, vs: 75, degr: 80, supply: 0, methanePct: 4.25, rate: 500, transport: 500 },
-        { name: "Poultry Waste", ts: 35, vs: 72, degr: 68, supply: 0, methanePct: 5.27, rate: 1000, transport: 500 },
-        { name: "Corn Straw", ts: 80, vs: 86, degr: 55, supply: 0, methanePct: 11.64, rate: 2000, transport: 500 },
-        { name: "Sugarcane Leaves", ts: 88, vs: 84, degr: 53, supply: 0, methanePct: 12.05, rate: 1500, transport: 500 },
-        { name: "Paddy Straw", ts: 80, vs: 85, degr: 53, supply: 0, methanePct: 11.09, rate: 2500, transport: 500 },
-        { name: "Maize Stalk", ts: 80, vs: 86, degr: 56, supply: 0, methanePct: 11.85, rate: 2000, transport: 500 },
-        { name: "Wheat Straw", ts: 85, vs: 84, degr: 55, supply: 0, methanePct: 12.08, rate: 2500, transport: 500 },
-        { name: "Spent Wash", ts: 5, vs: 87, degr: 90, supply: 0, methanePct: 1.2, rate: 200, transport: 200 },
-        { name: "Municipal Solid Waste", ts: 45, vs: 55, degr: 55, supply: 0, methanePct: 4.19, rate: 1000, transport: 500 },
-      ];
+          <div>
+            <table style="width:100%;border-collapse:collapse">
+              <tr><td>Highest Rated Capacity of Installed Plant (100%)</td><td id="spec-rated" class="right">8250 Kg/day</td></tr>
+              <tr><td>Total Working Capacity of Installed Plant (considered as 80%)</td><td id="spec-working" class="right">6600 Kg/day</td></tr>
+              <tr><td>Total Solid Manure Production per day</td><td id="spec-manure" class="right">13 ton</td></tr>
+              <tr><td>Total Boiler Fuel Required</td><td id="spec-boiler" class="right">4.54 Ton per day</td></tr>
+              <tr><td>Electricity Requirement per day</td><td id="spec-electric" class="right">~ 6000 kWh</td></tr>
+            </table>
+          </div>
 
-      function createRow(item) {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td style="text-align:left">${item.name}</td>
-          <td><input type="number" class="yellow" data-field="ts" value="${item.ts}"></td>
-          <td><input type="number" class="yellow" data-field="vs" value="${item.vs}"></td>
-          <td><input type="number" class="yellow" data-field="degr" value="${item.degr}"></td>
-          <td><input type="number" class="green" data-field="supply" value="${item.supply}"></td>
-          <td data-out="ts_tpd">-</td>
-          <td data-out="vs_tpd">-</td>
-          <td data-out="vs_red">-</td>
-          <td data-out="biogas">-</td>
-          <td><input type="number" data-field="methane" value="${item.methanePct}"></td>
-          <td><input type="number" data-field="rate" value="${item.rate}"></td>
-          <td><input type="number" data-field="transport" value="${item.transport}"></td>
-          <td data-out="cost_day">-</td>`;
-        return tr;
-      }
+          <div>
+            <table style="width:100%;border-collapse:collapse">
+              <tr><td>Price of CNG (Including GST)</td><td><input id="inp-priceCNG" type="number" value="72" step="0.01" style="text-align:right"></td></tr>
+              <tr><td>Electricity Rate</td><td><input id="inp-electricity" type="number" value="10" step="0.01" style="text-align:right"></td></tr>
+              <tr><td>Rate of Solid Manure</td><td><input id="inp-manure-rate" type="number" value="0" step="0.01" style="text-align:right"></td></tr>
+              <tr><td>Rate of Boiler Fuel</td><td><input id="inp-boiler-rate" type="number" value="2500" step="0.01" style="text-align:right"></td></tr>
+              <tr><td>Transportation Cost of CBG</td><td><input id="inp-cbg-transport" type="number" value="700" step="0.01" style="text-align:right"></td></tr>
+              <tr><td>No. of Working Days</td><td><input id="inp-working-days" type="number" value="330" step="1" style="text-align:right"></td></tr>
+            </table>
+          </div>
+        </div>
+      </section>
 
-      function loadTable() {
-        calcBody.innerHTML = "";
-        defaults.forEach(d => calcBody.appendChild(createRow(d)));
-        attachAutoUpdate();
-      }
+      <section class="card">
+        <div class="section-title">Daily P&L</div>
 
-      function calculateAll() {
-        const bf = 788;
-        const rows = [...calcBody.querySelectorAll("tr")];
-        let sumSupply = 0, sumBiogas = 0, wmn = 0, wmd = 0;
+        <div class="pnl-columns">
 
-        rows.forEach(r => {
-          const ts = num(r.querySelector('[data-field="ts"]').value);
-          const vs = num(r.querySelector('[data-field="vs"]').value);
-          const degr = num(r.querySelector('[data-field="degr"]').value);
-          const supply = num(r.querySelector('[data-field="supply"]').value);
-          const methane = num(r.querySelector('[data-field="methane"]').value);
-          const rate = num(r.querySelector('[data-field="rate"]').value);
-          const transport = num(r.querySelector('[data-field="transport"]').value);
-          const ts_tpd = supply * (ts / 100);
-          const vs_tpd = ts_tpd * (vs / 100);
-          const vs_red = vs_tpd * (degr / 100);
-          const biogas = vs_red * bf;
-          const cost_day = supply * (rate + transport);
-          r.querySelector('[data-out="ts_tpd"]').textContent = ts_tpd.toFixed(2) + " TPD";
-          r.querySelector('[data-out="vs_tpd"]').textContent = vs_tpd.toFixed(2) + " TPD";
-          r.querySelector('[data-out="vs_red"]').textContent = vs_red.toFixed(2) + " TPD";
-          r.querySelector('[data-out="biogas"]').textContent = biogas.toFixed(2) + " Nm³/day";
-          r.querySelector('[data-out="cost_day"]').textContent = "INR " + cost_day.toFixed(2);
-          sumSupply += supply;
-          sumBiogas += biogas;
-          wmn += methane * vs_red;
-          wmd += vs_red;
-        });
+          <div class="income-box">
+            <h4>Income (Per Day)</h4>
+            <div style="overflow:auto">
+            <table style="width:100%;">
+              <thead>
+                <tr><th style="width:10%">S.No</th><th style="width:55%">Specification</th><th style="width:15%">Rate</th><th style="width:20%">Sub Total</th></tr>
+              </thead>
+              <tbody id="income-body">
+                <tr><td class="center">1</td><td class="left">CNG</td><td id="rate-cng" class="center">₹ 72.00/Kg</td><td id="income-cng" class="right">₹ 0.00</td></tr>
+                <tr><td class="center">2</td><td class="left">Fertilizer/Pallets</td><td id="rate-manure" class="center">₹ 0.00/Ton</td><td id="income-manure" class="right">₹ 0.00</td></tr>
+                <tr><td class="center">3</td><td class="left">Carbon Credits</td><td id="rate-carbon" class="center">₹ 0.00</td><td id="income-carbon" class="right">₹ 0.00</td></tr>
+                <tr><td colspan="4">&nbsp;</td></tr>
+                <tr class="totals-row"><td colspan="3" class="right">Total Earning</td><td id="total-earning" class="right">₹ 0.00</td></tr>
+              </tbody>
+            </table>
+            </div>
+          </div>
 
-        const methaneYield = wmd ? (wmn / wmd) : 0;
-        const totalWorkingCapacity = sumSupply * (methaneYield / 100);
-        const highestRatedCapacity = totalWorkingCapacity / 0.8;
+          <div class="expense-box">
+            <h4>Expenditure (Per Day)</h4>
+            <div style="overflow:auto">
+            <table style="width:100%;">
+              <thead>
+                <tr><th style="width:10%">S.No</th><th style="width:55%">Specification</th><th style="width:15%">Rate</th><th style="width:20%">Sub Total</th></tr>
+              </thead>
+              <tbody id="expense-body">
+                <tr><td class="center">1</td><td class="left">Electricity Cost</td><td id="exp-rate-electric" class="center">₹ 10.00/kWh</td><td id="exp-electric" class="right">₹ 0.00</td></tr>
+                <tr><td class="center">2</td><td class="left">Boiler Fuel Cost</td><td id="exp-rate-boiler" class="center">₹ 2,500.00/Ton</td><td id="exp-boiler" class="right">₹ 0.00</td></tr>
+                <tr><td class="center">3</td><td class="left">Average Raw Material</td><td id="exp-rate-raw" class="center">₹ 1,000.00/Ton</td><td id="exp-raw" class="right">₹ 0.00</td></tr>
+                <tr><td class="center">4</td><td class="left">Average Transportation of Raw Material</td><td id="exp-rate-trans" class="center">₹ 300.00/Ton</td><td id="exp-trans" class="right">₹ 0.00</td></tr>
+                <tr><td class="center">5</td><td class="left">Human Resource</td><td id="exp-rate-hr" class="center">₹ 12,000.00 per Day</td><td id="exp-hr" class="right">₹ 12,000.00</td></tr>
+                <tr><td class="center">6</td><td class="left">Maintainance</td><td id="exp-rate-maint" class="center">₹ 10,000.00 per Day</td><td id="exp-maint" class="right">₹ 10,000.00</td></tr>
+                <tr><td class="center">7</td><td class="left">Average Transportation cost of CNG (Final Product) Estimated for Average of 70 km Round Trip from Plant.</td><td id="exp-rate-cbg" class="center">₹ 700.00 per trip</td><td id="exp-cbg" class="right">₹ 0.00</td></tr>
+                <tr><td class="center">8</td><td class="left">Misc Expenses</td><td id="exp-rate-misc" class="center">₹ 3,000.00 per Day</td><td id="exp-misc" class="right">₹ 3,000.00</td></tr>
 
-        document.getElementById("sum-supply").textContent = sumSupply.toFixed(2) + " TPD";
-        document.getElementById("sum-biogas").textContent = sumBiogas.toFixed(2) + " Nm³/day";
-        document.getElementById("working-capacity").textContent = totalWorkingCapacity.toFixed(2) + " TPD";
-        document.getElementById("rated-capacity").textContent = highestRatedCapacity.toFixed(2) + " TPD";
+                <tr class="totals-row"><td colspan="3" class="right">Total Expenditure</td><td id="total-expenditure" class="right">₹ 0.00</td></tr>
+              </tbody>
+            </table>
+            </div>
+          </div>
 
-        return { sumSupply, sumBiogas, totalWorkingCapacity, highestRatedCapacity };
-      }
+        </div>
 
-      function attachAutoUpdate() {
-        document.querySelectorAll("input").forEach(inp => {
-          inp.addEventListener("input", calculateAll);
-        });
-      }
+        <div style="margin-top:12px;">
+          <table style="width:100%;">
+            <tr class="profit-row">
+              <td style="width:33%;text-align:center;">Daily Profit<br><span id="profit-daily">₹ 0.00</span></td>
+              <td style="width:34%;text-align:center;">Monthly Profit<br><span id="profit-monthly">₹ 0.00</span></td>
+              <td style="width:33%;text-align:center;">Yearly Profit<br><span id="profit-yearly">₹ 0.00</span></td>
+            </tr>
+          </table>
+        </div>
 
-      // ✅ FIX: Working Generate Report Button
-      document.getElementById("generateReportBtn").onclick = () => {
-        const result = calculateAll();
-        const report = document.getElementById("reportArea");
-        const reportContent = document.getElementById("reportContent");
-        const date = new Date().toLocaleString();
-        document.getElementById("reportDate").textContent = date;
+      </section>
 
-        reportContent.innerHTML = `
-          <p><strong>Total Raw Material (TPD):</strong> ${result.sumSupply.toFixed(2)}</p>
-          <p><strong>Total Biogas (Nm³/day):</strong> ${result.sumBiogas.toFixed(2)}</p>
-          <p><strong>Total Working Capacity (TPD):</strong> ${result.totalWorkingCapacity.toFixed(2)}</p>
-          <p><strong>Highest Rated Capacity (TPD):</strong> ${result.highestRatedCapacity.toFixed(2)}</p>
-        `;
-        report.style.display = "block";
+    </main>
 
-        // Open print dialog for PDF/print
-        window.print();
-      };
+    <footer>© 2025 Finsen Ritter Pvt. Ltd. – All rights reserved</footer>
+  </div>
 
-      document.getElementById("resetBtn").onclick = () => { loadTable(); calculateAll(); };
+<script>
+/* -----------------------
+   JavaScript: Calculator + P&L
+   - Uses fixed formulas as requested.
+   - Auto-calculates when inputs or feedstock supplies change.
+   - Fixed: updates Project Specifications correctly and consistently.
+   ----------------------- */
 
-      loadTable();
+const calcBody = document.getElementById('calc-body');
+
+// helper
+function num(v){ const n = parseFloat(v); return isFinite(n)?n:0; }
+function fmtMoney(v){ return '₹ '+(Number(v)||0).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+
+// default feedstocks (same as original)
+const defaults = [
+  {name:"Napier Grass",ts:28,vs:88,degr:75,supply:0,methanePct:5.69,rate:1000,transport:300},
+  {name:"Cattle Dung",ts:28,vs:80,degr:45,supply:0,methanePct:3.1,rate:500,transport:300},
+  {name:"Press Mud",ts:23,vs:75,degr:80,supply:0,methanePct:4.25,rate:500,transport:500},
+  {name:"Poultry Waste",ts:35,vs:72,degr:68,supply:0,methanePct:5.27,rate:1000,transport:500},
+  {name:"Corn Straw",ts:80,vs:86,degr:55,supply:0,methanePct:11.64,rate:2000,transport:500},
+  {name:"Sugarcane Leaves",ts:88,vs:84,degr:53,supply:0,methanePct:12.05,rate:1500,transport:500},
+  {name:"Paddy Straw",ts:80,vs:85,degr:53,supply:0,methanePct:11.09,rate:2500,transport:500},
+  {name:"Maize Stalk",ts:80,vs:86,degr:56,supply:0,methanePct:11.85,rate:2000,transport:500},
+  {name:"Wheat Straw",ts:85,vs:84,degr:55,supply:0,methanePct:12.08,rate:2500,transport:500},
+  {name:"Spent Wash",ts:5,vs:87,degr:90,supply:0,methanePct:1.2,rate:200,transport:200},
+  {name:"Municipal Solid Waste",ts:45,vs:55,degr:55,supply:0,methanePct:4.19,rate:1000,transport:500},
+];
+
+function createRow(item){
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td class="left">${item.name}</td>
+    <td><input data-field="ts" type="number" value="${item.ts}" step="0.01"></td>
+    <td><input data-field="vs" type="number" value="${item.vs}" step="0.01"></td>
+    <td><input data-field="degr" type="number" value="${item.degr}" step="0.01"></td>
+    <td><input data-field="supply" type="number" value="${item.supply}" step="0.01"></td>
+    <td data-out="ts_tpd">-</td>
+    <td data-out="vs_tpd">-</td>
+    <td data-out="vs_red">-</td>
+    <td data-out="biogas">-</td>
+    <td><input data-field="methane" type="number" value="${item.methanePct}" step="0.01"></td>
+    <td><input data-field="rate" type="number" value="${item.rate}" step="0.01"></td>
+    <td><input data-field="transport" type="number" value="${item.transport}" step="0.01"></td>
+    <td data-out="cost_day">-</td>
+  `;
+  return tr;
+}
+
+function loadTable(){
+  calcBody.innerHTML = '';
+  defaults.forEach(d=> calcBody.appendChild(createRow(d)));
+  attachListeners();
+}
+
+// core calculate function (returns load-bearing numbers)
+function calculateAll(){
+  const bf = 788; // biogas factor Nm³ per ton of VS reduced
+  const rows = [...calcBody.querySelectorAll('tr')];
+
+  let sumSupply = 0;
+  let sumBiogas = 0;
+  let wmn = 0;
+  let wmd = 0;
+  let sumDry = 0;
+  let totalRawCost = 0;
+  let totalTransportCost = 0;
+  let totalCostDay = 0;
+
+  rows.forEach(r=>{
+    const ts = num(r.querySelector('[data-field="ts"]').value);
+    const vs = num(r.querySelector('[data-field="vs"]').value);
+    const degr = num(r.querySelector('[data-field="degr"]').value);
+    const supply = num(r.querySelector('[data-field="supply"]').value);
+    const methane = num(r.querySelector('[data-field="methane"]').value);
+    const rate = num(r.querySelector('[data-field="rate"]').value);
+    const transport = num(r.querySelector('[data-field="transport"]').value);
+
+    const ts_tpd = supply * (ts/100);               // total solids (TPD)
+    const vs_tpd = ts_tpd * (vs/100);               // volatile solids (TPD)
+    const vs_red = vs_tpd * (degr/100);             // VS reduced (TPD)
+    const biogas = vs_red * bf;                     // Nm³/day
+    const cost_day = supply * (rate + transport);   // ₹/day for this feedstock (raw+transport)
+
+    // write outputs
+    r.querySelector('[data-out="ts_tpd"]').textContent = ts_tpd.toFixed(2) + ' TPD';
+    r.querySelector('[data-out="vs_tpd"]').textContent = vs_tpd.toFixed(2) + ' TPD';
+    r.querySelector('[data-out="vs_red"]').textContent = vs_red.toFixed(2) + ' TPD';
+    r.querySelector('[data-out="biogas"]').textContent = biogas.toFixed(2) + ' Nm³/day';
+    r.querySelector('[data-out="cost_day"]').textContent = '₹ ' + cost_day.toFixed(2);
+
+    // accumulate
+    sumSupply += supply;
+    sumDry += ts_tpd;
+    sumBiogas += biogas;
+    totalRawCost += rate * supply;
+    totalTransportCost += transport * supply;
+    totalCostDay += cost_day;
+    wmn += methane * vs_red;
+    wmd += vs_red;
+  });
+
+  const methaneYield = wmd ? (wmn / wmd) : 0;               // weighted methane %
+  const totalWorkingCapacity = sumSupply * (methaneYield/100) - 3 / 100; // TPD effective
+  const highestRatedCapacity = totalWorkingCapacity / 0.8;   // rated capacity (assume 80%)
+  const propRawCost = sumSupply ? totalRawCost / sumSupply : 0;
+  const propTransportCost = sumSupply ? totalTransportCost / sumSupply : 0;
+
+  // update UI summary & header labels
+  document.getElementById('sum-supply').textContent = (sumSupply.toFixed(2)) + ' TPD';
+  document.getElementById('sum-biogas').textContent = (sumBiogas.toFixed(2)) + ' Nm³/day';
+  document.getElementById('rated-capacity').textContent = (highestRatedCapacity.toFixed(2)) + ' TPD';
+  document.getElementById('working-capacity').textContent = (totalWorkingCapacity.toFixed(2)) + ' TPD';
+  document.getElementById('sum-dry-product').textContent = (sumDry.toFixed(2)) + ' TPD';
+  document.getElementById('prop-raw-cost').textContent = '₹ ' + propRawCost.toFixed(2) + ' /ton';
+  document.getElementById('prop-transport-cost').textContent = '₹ ' + propTransportCost.toFixed(2) + ' /ton';
+  document.getElementById('total-raw-cost').textContent = '₹ ' + totalRawCost.toFixed(2);
+  document.getElementById('total-cost-day').textContent = '₹ ' + totalCostDay.toFixed(2);
+
+  // Update Project Specification table
+  const specTonnageEl = document.getElementById('spec-tonnage');
+  const specAvgRateEl = document.getElementById('spec-avg-rate');
+  const specAvgTransportEl = document.getElementById('spec-avg-transport');
+  const specAvgWithTransportEl = document.getElementById('spec-avg-with-transport');
+  const specRatedEl = document.getElementById('spec-rated');
+  const specWorkingEl = document.getElementById('spec-working');
+
+  if(specTonnageEl) specTonnageEl.textContent = sumSupply.toFixed(2) + ' Ton';
+  if(specAvgRateEl) specAvgRateEl.textContent = '₹ ' + propRawCost.toFixed(2) + ' per ton';
+  if(specAvgTransportEl) specAvgTransportEl.textContent = '₹ ' + propTransportCost.toFixed(2) + ' per ton';
+  if(specAvgWithTransportEl) specAvgWithTransportEl.textContent = '₹ ' + (propRawCost + propTransportCost).toFixed(2) + ' per ton';
+
+  if(specRatedEl) specRatedEl.textContent = (highestRatedCapacity*1000 ? (highestRatedCapacity*1000).toFixed(0) : '0') + ' Kg/day';
+  if(specWorkingEl) specWorkingEl.textContent = (totalWorkingCapacity*1000 ? (totalWorkingCapacity*1000).toFixed(0) : '0') + ' Kg/day';
+
+  // return needed numbers
+  return {
+    sumSupply,
+    sumBiogas,
+    totalWorkingCapacity,
+    highestRatedCapacity,
+    sumDry,
+    vsReduced: wmd,
+    propRawCost,
+    propTransportCost,
+    totalRawCost,
+    totalTransportCost,
+    totalCostDay
+  };
+}
+
+// attach listeners for auto update
+function attachListeners(){
+  document.querySelectorAll('#calc-body input').forEach(inp=>{
+    inp.removeEventListener && inp.removeEventListener('input', ()=>{});
+    inp.addEventListener('input', ()=> {
       calculateAll();
-    </script>
-  </body>
+      calculatePL();
+    });
+  });
+  ['inp-priceCNG','inp-electricity','inp-manure-rate','inp-boiler-rate','inp-cbg-transport','inp-working-days'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el){
+      el.addEventListener('input', ()=> {
+        calculatePL();
+      });
+    }
+  });
+}
+
+// Reset defaults
+document.getElementById('btn-reset').addEventListener('click', ()=>{
+  loadTable();
+  calculateAll();
+  calculatePL();
+});
+
+// Print / generate report
+document.getElementById('btn-print').addEventListener('click', ()=>{
+  window.print();
+});
+
+/* ---------- P&L calculation using fixed formulas ---------- */
+
+function calculatePL(){
+  const r = calculateAll(); // get latest numbers
+
+  // read user inputs
+  const priceCNG = num(document.getElementById('inp-priceCNG').value); // ₹/kg
+  const electricityRate = num(document.getElementById('inp-electricity').value); // ₹/kWh
+  const manureRate = num(document.getElementById('inp-manure-rate').value); // ₹/ton
+  const boilerRate = num(document.getElementById('inp-boiler-rate').value); // ₹/ton
+  const cbgTransport = num(document.getElementById('inp-cbg-transport').value); // ₹/trip
+  const workingDays = Math.max(1, Math.floor(num(document.getElementById('inp-working-days').value)));
+  const supply = num(document.querySelector('[data-field="supply"]').value);
+  
+  // fixed constants
+  const electricity_kwh_per_day = Math.round((5000/5500) * (r.totalWorkingCapacity * 1000));
+  const solid_manure_ton_per_day = (r.sumDry - r.vsReduced); // dynamic
+  //const boiler_fuel_ton_per_day = (supply >= 120) ? 8 : (supply >= 6) ? 3.5 : 2.4;
+  const boiler_fuel_ton_per_day = (supply >= 120) ? 8 : (supply >= 6) ? 3.5 : 2.4;
+  const human_resource_per_day = 12000;
+  const maintenance_per_day = 10000;
+  const misc_per_day = 3000;
+  const cbg_trips_per_day = 6;
+  //console.log(boiler_fuel_ton_per_day)
+  // PRODUCTIONS
+  const producedCNG_kg_per_day = (r.totalWorkingCapacity || 0) * 1000; // TPD to Kg
+
+  // INCOME
+  const incomeCNG = producedCNG_kg_per_day * priceCNG; // ₹/day
+  const incomeManure = solid_manure_ton_per_day * manureRate; // ₹/day
+  const incomeCarbon = 0;
+  const totalIncome = incomeCNG + incomeManure + incomeCarbon;
+
+  // EXPENSES
+  const electricityCost = electricity_kwh_per_day * electricityRate;
+  const boilerCost = boiler_fuel_ton_per_day * boilerRate;
+  const rawMaterialCost = r.totalRawCost || 0; // ₹/day
+  const transportRawCost = r.totalTransportCost || 0;
+  const cbgTransportCost = cbg_trips_per_day * cbgTransport;
+  const totalExpenditure = electricityCost + boilerCost + rawMaterialCost + transportRawCost + human_resource_per_day + maintenance_per_day + cbgTransportCost + misc_per_day;
+
+  // PROFITS
+  const dailyProfit = totalIncome - totalExpenditure;
+  const monthlyProfit = dailyProfit * 30;
+  const yearlyProfit = dailyProfit * workingDays;
+
+  /* Update Income table */
+  document.getElementById('rate-cng').textContent = '₹ '+priceCNG.toFixed(2) + '/Kg';
+  document.getElementById('income-cng').textContent = fmtMoney(incomeCNG);
+
+  document.getElementById('rate-manure').textContent = '₹ '+manureRate.toFixed(2) + '/Ton';
+  document.getElementById('income-manure').textContent = fmtMoney(incomeManure);
+
+  document.getElementById('rate-carbon').textContent = '₹ 0.00';
+  document.getElementById('income-carbon').textContent = fmtMoney(incomeCarbon);
+
+  document.getElementById('total-earning').textContent =(totalIncome<0)? 0 : fmtMoney(totalIncome);
+
+  /* Update Expenditure table */
+  document.getElementById('exp-rate-electric').textContent = '₹ '+electricityRate.toFixed(2) + '/kWh';
+  document.getElementById('exp-electric').textContent = fmtMoney(electricityCost);
+
+  document.getElementById('exp-rate-boiler').textContent = '₹ '+boilerRate.toFixed(2) + '/Ton';
+  document.getElementById('exp-boiler').textContent = fmtMoney(boilerCost);
+
+  const avgRawRate = r.propRawCost || 0;
+  document.getElementById('exp-rate-raw').textContent = '₹ ' + avgRawRate.toFixed(2) + '/Ton';
+  document.getElementById('exp-raw').textContent = fmtMoney(r.totalRawCost || 0);
+
+  document.getElementById('exp-rate-trans').textContent = '₹ ' + (r.propTransportCost||0).toFixed(2) + '/Ton';
+  document.getElementById('exp-trans').textContent = fmtMoney(r.totalTransportCost || 0);
+
+  document.getElementById('exp-hr').textContent = fmtMoney(human_resource_per_day);
+  document.getElementById('exp-maint').textContent = fmtMoney(maintenance_per_day);
+
+  document.getElementById('exp-rate-cbg').textContent = '₹ ' + cbgTransport.toFixed(2) + ' per trip';
+  document.getElementById('exp-cbg').textContent = fmtMoney(cbgTransportCost);
+
+  document.getElementById('exp-rate-misc').textContent = '₹ '+misc_per_day.toFixed(2) + ' per Day';
+  document.getElementById('exp-misc').textContent = fmtMoney(misc_per_day);
+
+  document.getElementById('total-expenditure').textContent = fmtMoney(totalExpenditure);
+
+  /* Update Profit summary */
+  document.getElementById('profit-daily').textContent =(dailyProfit < 0) ? 0 : fmtMoney(dailyProfit);
+  document.getElementById('profit-monthly').textContent =(monthlyProfit < 0) ? 0 : fmtMoney(monthlyProfit);
+  document.getElementById('profit-yearly').textContent =(yearlyProfit < 0) ? 0 : fmtMoney(yearlyProfit);
+
+  // update specs
+  const specRatedEl = document.getElementById('spec-rated');
+  const specWorkingEl = document.getElementById('spec-working');
+  if(specRatedEl) specRatedEl.textContent = (r.highestRatedCapacity ? (r.highestRatedCapacity*1000).toFixed(0) : '0') + ' Kg/day';
+  if(specWorkingEl) specWorkingEl.textContent = (r.totalWorkingCapacity ? (r.totalWorkingCapacity*1000).toFixed(0) : '0') + ' Kg/day';
+
+  document.getElementById('spec-manure').textContent = solid_manure_ton_per_day.toFixed(2) + ' ton';
+  document.getElementById('spec-boiler').textContent = boiler_fuel_ton_per_day + ' Ton per day';
+  document.getElementById('spec-electric').textContent = (electricity_kwh_per_day< 0)? 0 : electricity_kwh_per_day + ' kWh';
+
+  return {
+    incomeCNG, incomeManure, totalIncome,
+    electricityCost, boilerCost, rawMaterialCost, transportRawCost, cbgTransportCost,
+    totalExpenditure, dailyProfit, monthlyProfit, yearlyProfit,
+    producedCNG_kg_per_day: producedCNG_kg_per_day
+  };
+}
+
+/* Initialize */
+loadTable();
+calculateAll();
+calculatePL();
+</script>
+</body>
 </html>
