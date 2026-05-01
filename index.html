@@ -199,7 +199,7 @@
               <tr><td>Electricity Rate</td><td><input id="inp-electricity" type="number" value="10" step="0.01" style="text-align:right"></td></tr>
               <tr><td>Rate of Solid Manure</td><td><input id="inp-manure-rate" type="number" value="0" step="0.01" style="text-align:right"></td></tr>
               <tr><td>Rate of Boiler Fuel</td><td><input id="inp-boiler-rate" type="number" value="8000" step="0.01" style="text-align:right"></td></tr>
-              <tr><td>Transportation Cost of CBG</td><td><input id="inp-cbg-transport" type="number" value="700" step="0.01" style="text-align:right"></td></tr>
+              <tr><td>Transportation Cost of CBG (₹/kg)</td><td><input id="inp-cbg-transport" type="number" value="2" step="0.01" style="text-align:right"></td></tr>
               <tr><td>No. of Working Days</td><td><input id="inp-working-days" type="number" value="330" step="1" style="text-align:right"></td></tr>
             </table>
           </div>
@@ -241,9 +241,9 @@
                 <tr><td class="center">2</td><td class="left">Boiler Fuel Cost</td><td id="exp-rate-boiler" class="center">₹ 8,000.00/Ton</td><td id="exp-boiler" class="right">₹ 0.00</td></tr>
                 <tr><td class="center">3</td><td class="left">Average Raw Material</td><td id="exp-rate-raw" class="center">₹ 1,000.00/Ton</td><td id="exp-raw" class="right">₹ 0.00</td></tr>
                 <tr><td class="center">4</td><td class="left">Average Transportation of Raw Material</td><td id="exp-rate-trans" class="center">₹ 300.00/Ton</td><td id="exp-trans" class="right">₹ 0.00</td></tr>
-                <tr><td class="center">5</td><td class="left">Human Resource</td><td id="exp-rate-hr" class="center">₹ 12,000.00 per Day</td><td id="exp-hr" class="right">₹ 12,000.00</td></tr>
-                <tr><td class="center">6</td><td class="left">Maintainance</td><td id="exp-rate-maint" class="center">₹ 10,000.00 per Day</td><td id="exp-maint" class="right">₹ 10,000.00</td></tr>
-                <tr><td class="center">7</td><td class="left">Average Transportation cost of CNG (Final Product) Estimated for Average of 70 km Round Trip from Plant.</td><td id="exp-rate-cbg" class="center">₹ 700.00 per trip</td><td id="exp-cbg" class="right">₹ 0.00</td></tr>
+                <tr><td class="center">5</td><td class="left">Human Resource</td><td id="exp-rate-hr" class="center">₹ 30,000.00 per Day</td><td id="exp-hr" class="right">₹ 30,000.00</td></tr>
+                <tr><td class="center">6</td><td class="left">Maintainance</td><td id="exp-rate-maint" class="center">₹ 8,000.00 per Day</td><td id="exp-maint" class="right">₹ 8,000.00</td></tr>
+                <tr><td class="center">7</td><td class="left">Average Transportation cost of CNG (Final Product)</td><td id="exp-rate-cbg" class="center">₹ 2.00/kg</td><td id="exp-cbg" class="right">₹ 0.00</td></tr>
                 <tr><td class="center">8</td><td class="left">Misc Expenses</td><td id="exp-rate-misc" class="center">₹ 3,000.00 per Day</td><td id="exp-misc" class="right">₹ 3,000.00</td></tr>
 
                 <tr class="totals-row"><td colspan="3" class="right">Total Expenditure</td><td id="total-expenditure" class="right">₹ 0.00</td></tr>
@@ -285,19 +285,20 @@ const calcBody = document.getElementById('calc-body');
 function num(v){ const n = parseFloat(v); return isFinite(n)?n:0; }
 function fmtMoney(v){ return '₹ '+(Number(v)||0).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2}); }
 
-// default feedstocks (same as original)
+// default feedstocks — calibrated from Excel GOD File (Raw Material Details sheet)
+// CH4 content in biogas = fixed 55% for all feedstocks (Excel Mass Balance constant)
 const defaults = [
-  {name:"Napier Grass",ts:26,vs:80,degr:75,supply:0,methanePct:5.69,rate:1000,transport:300},
-  {name:"Cattle Dung",ts:20,vs:45,degr:45,supply:0,methanePct:3.1,rate:500,transport:300},
-  {name:"Press Mud",ts:23,vs:75,degr:80,supply:0,methanePct:4.25,rate:500,transport:500},
-  {name:"Poultry Waste",ts:35,vs:72,degr:68,supply:0,methanePct:5.27,rate:1000,transport:500},
-  {name:"Corn Straw",ts:80,vs:86,degr:55,supply:0,methanePct:11.64,rate:2000,transport:500},
-  {name:"Sugarcane Leaves",ts:88,vs:84,degr:53,supply:0,methanePct:12.05,rate:1500,transport:500},
-  {name:"Paddy Straw",ts:80,vs:85,degr:53,supply:0,methanePct:11.09,rate:2500,transport:500},
-  {name:"Maize Stalk",ts:80,vs:86,degr:56,supply:0,methanePct:11.85,rate:2000,transport:500},
-  {name:"Wheat Straw",ts:85,vs:84,degr:55,supply:0,methanePct:12.08,rate:2500,transport:500},
-  {name:"Spent Wash",ts:5,vs:87,degr:90,supply:0,methanePct:1.2,rate:200,transport:200},
-  {name:"Municipal Solid Waste",ts:45,vs:55,degr:55,supply:0,methanePct:4.19,rate:1000,transport:500},
+  {name:"Napier Grass",        ts:26,   vs:85,   degr:80, supply:0, rate:1000, transport:300},
+  {name:"Cattle Dung",         ts:20,   vs:80,   degr:45, supply:0, rate:500,  transport:300},
+  {name:"Press Mud",           ts:23,   vs:75,   degr:80, supply:0, rate:1000, transport:500},
+  {name:"Poultry Waste",       ts:35,   vs:72,   degr:68, supply:0, rate:1000, transport:500},
+  {name:"Corn Straw",          ts:80,   vs:86,   degr:55, supply:0, rate:1000, transport:500},
+  {name:"Sugarcane Leaves",    ts:88,   vs:84,   degr:53, supply:0, rate:1500, transport:500},
+  {name:"Paddy Straw",         ts:85.7, vs:82.3, degr:53, supply:0, rate:3000, transport:500},
+  {name:"Maize Stalk",         ts:80,   vs:86,   degr:56, supply:0, rate:3000, transport:500},
+  {name:"Wheat Straw",         ts:80,   vs:84,   degr:55, supply:0, rate:3000, transport:500},
+  {name:"Spent Wash",          ts:5,    vs:87,   degr:90, supply:0, rate:3000, transport:500},
+  {name:"Municipal Solid Waste",ts:45,  vs:55,   degr:55, supply:0, rate:3000, transport:500},
 ];
 
 function createRow(item){
@@ -312,7 +313,7 @@ function createRow(item){
     <td data-out="vs_tpd">-</td>
     <td data-out="vs_red">-</td>
     <td data-out="biogas">-</td>
-    <td><input data-field="methane" type="number" value="${item.methanePct}" step="0.01"></td>
+    <td data-out="methane_yield">-</td>
     <td><input data-field="rate" type="number" value="${item.rate}" step="0.01"></td>
     <td><input data-field="transport" type="number" value="${item.transport}" step="0.01"></td>
     <td data-out="cost_day">-</td>
@@ -333,19 +334,20 @@ function calculateAll(){
 
   let sumSupply = 0;
   let sumBiogas = 0;
-  let wmn = 0;
-  let wmd = 0;
   let sumDry = 0;
+  let sumVSReduced = 0;
   let totalRawCost = 0;
   let totalTransportCost = 0;
   let totalCostDay = 0;
+
+  // CH4 content in biogas is fixed at 55% — Excel Mass Balance O11 = N11 × 55% (constant)
+  const CH4_PCT_IN_BIOGAS = 55; // % (fixed plant design constant from Mass Balance)
 
   rows.forEach(r=>{
     const ts = num(r.querySelector('[data-field="ts"]').value);
     const vs = num(r.querySelector('[data-field="vs"]').value);
     const degr = num(r.querySelector('[data-field="degr"]').value);
     const supply = num(r.querySelector('[data-field="supply"]').value);
-    const methane = num(r.querySelector('[data-field="methane"]').value);
     const rate = num(r.querySelector('[data-field="rate"]').value);
     const transport = num(r.querySelector('[data-field="transport"]').value);
 
@@ -355,36 +357,75 @@ function calculateAll(){
     const biogas = vs_red * bf;                     // Nm³/day
     const cost_day = supply * (rate + transport);   // ₹/day for this feedstock (raw+transport)
 
+    // Methane Yield % — Excel RD I11 = P11/1000/F11
+    //   P11 = O11×0.71  (methane kg/day, CH4 density 0.71 kg/Nm³ used in RD sheet)
+    //   O11 = N11×55%   (methane Nm³/day)
+    //   → methane_yield % = (biogas × 55% × 0.71) / (supply × 1000) × 100
+    const methane_yield_pct = supply > 0
+      ? (biogas * (CH4_PCT_IN_BIOGAS/100) * 0.71) / (supply * 1000) * 100
+      : 0;
+
     // write outputs
     r.querySelector('[data-out="ts_tpd"]').textContent = ts_tpd.toFixed(2) + ' TPD';
     r.querySelector('[data-out="vs_tpd"]').textContent = vs_tpd.toFixed(2) + ' TPD';
     r.querySelector('[data-out="vs_red"]').textContent = vs_red.toFixed(2) + ' TPD';
     r.querySelector('[data-out="biogas"]').textContent = biogas.toFixed(2) + ' Nm³/day';
+    r.querySelector('[data-out="methane_yield"]').textContent = methane_yield_pct.toFixed(4) + ' %';
     r.querySelector('[data-out="cost_day"]').textContent = '₹ ' + cost_day.toFixed(2);
 
     // accumulate
     sumSupply += supply;
     sumDry += ts_tpd;
+    sumVSReduced += vs_red;
     sumBiogas += biogas;
     totalRawCost += rate * supply;
     totalTransportCost += transport * supply;
     totalCostDay += cost_day;
-    wmn += methane * vs_red;
-    wmd += vs_red;
   });
 
-  const methaneYield = wmd ? (wmn / wmd) : 0;               // weighted methane %
-  const totalWorkingCapacity = sumSupply * (methaneYield/100) * (1 - 3/100); // TPD effective (3% process loss)
-  const highestRatedCapacity = totalWorkingCapacity / 0.8;   // rated capacity (assume 80%)
+  // CH4 content in biogas fixed at 55% (Excel constant — no per-feedstock override)
+  const methaneYield = CH4_PCT_IN_BIOGAS;
+
+  // CBG Production — Excel Mass Balance formula:
+  //   biogas × CH4% × CH4 density (0.716 kg/Nm³ at STP) × (1 − 3% purification slippage)
+  //   RD C41 = ROUNDDOWN(Mass Balance F22, -2)  →  round DOWN to nearest 100 kg
+  const CH4_DENSITY  = 0.716;   // kg/Nm³ at STP (Mass Balance)
+  const SLIPPAGE     = 0.03;    // 3% purification loss (Mass Balance C17)
+  const cbg_kg_raw   = sumBiogas * (methaneYield / 100) * CH4_DENSITY * (1 - SLIPPAGE);
+  const working_capacity_kg = Math.floor(cbg_kg_raw / 100) * 100; // ROUNDDOWN to nearest 100
+  const totalWorkingCapacity = working_capacity_kg / 1000;         // TPD
+  const highestRatedCapacity = totalWorkingCapacity / 0.8;         // TPD (Plant Efficiency = 80%)
   const propRawCost = sumSupply ? totalRawCost / sumSupply : 0;
   const propTransportCost = sumSupply ? totalTransportCost / sumSupply : 0;
+
+  // Dry Biproduct (solid digestate) — Mass Balance M11 formula:
+  //   M11 = ((J12 - M20×J11) / (M19-M20)) / (1-O10)
+  //   J11 = digestate mass (kg/day) = slurry mass - biogas mass
+  //   J12 = remaining TS after digestion (kg/day) = total TS in - VS destroyed
+  //   M19 = SLS solid TS fraction = 0.30 (30% TS = 70% moisture, from MB C23)
+  //   M20 = SLS liquid TS fraction = 0.025 (2.5%, from MB C22)
+  //   O10 = correction factor = 0.25 (from MB O10)
+  const SLURRY_TS_PCT  = 0.10;         // 10% TS target for digester slurry
+  const BIOGAS_DENSITY = 1.2264;       // kg/Nm³ (55% CH4 + 45% CO2 at NTP, empirical from MB)
+  const SLS_SOL_TS     = 0.30;         // solid cake TS fraction (MB: 1 - solid moisture 0.70)
+  const SLS_LIQ_TS     = 0.025;        // liquid fraction TS (MB C22)
+  const SLS_CORR       = 0.25;         // O10 correction factor (MB O10)
+
+  const remaining_TS_kg  = sumVSReduced > 0 ? (sumDry - sumVSReduced) * 1000 : 0;
+  const slurry_mass_kg   = sumDry > 0 ? (sumDry * 1000 / SLURRY_TS_PCT) : 0;
+  const biogas_mass_kg   = sumBiogas * BIOGAS_DENSITY;
+  const digestate_kg     = slurry_mass_kg - biogas_mass_kg;
+  const S_SLS            = digestate_kg > 0
+    ? (remaining_TS_kg - SLS_LIQ_TS * digestate_kg) / (SLS_SOL_TS - SLS_LIQ_TS)
+    : 0;
+  const dry_biproduct_tpd = S_SLS > 0 ? (S_SLS / (1 - SLS_CORR)) / 1000 : 0;
 
   // update UI summary & header labels
   document.getElementById('sum-supply').textContent = (sumSupply.toFixed(2)) + ' TPD';
   document.getElementById('sum-biogas').textContent = (sumBiogas.toFixed(2)) + ' Nm³/day';
   document.getElementById('rated-capacity').textContent = (highestRatedCapacity.toFixed(2)) + ' TPD';
   document.getElementById('working-capacity').textContent = (totalWorkingCapacity.toFixed(2)) + ' TPD';
-  document.getElementById('sum-dry-product').textContent = (sumDry.toFixed(2)) + ' TPD';
+  document.getElementById('sum-dry-product').textContent = (dry_biproduct_tpd.toFixed(3)) + ' TPD';
   document.getElementById('prop-raw-cost').textContent = '₹ ' + propRawCost.toFixed(2) + ' /ton';
   document.getElementById('prop-transport-cost').textContent = '₹ ' + propTransportCost.toFixed(2) + ' /ton';
   document.getElementById('total-raw-cost').textContent = '₹ ' + totalRawCost.toFixed(2);
@@ -412,8 +453,10 @@ function calculateAll(){
     sumBiogas,
     totalWorkingCapacity,
     highestRatedCapacity,
+    working_capacity_kg,
     sumDry,
-    vsReduced: wmd,
+    sumVSReduced,
+    dry_biproduct_tpd,
     propRawCost,
     propTransportCost,
     totalRawCost,
@@ -467,18 +510,29 @@ function calculatePL(){
   const workingDays = Math.max(1, Math.floor(num(document.getElementById('inp-working-days').value)));
   const supply = r.sumSupply; // total tonnage across all feedstocks
   
-  // fixed constants
-  const electricity_kwh_per_day = Math.round((5000/5500) * (r.totalWorkingCapacity * 1000));
-  const solid_manure_ton_per_day = (r.sumDry - r.vsReduced); // dynamic
-  //const boiler_fuel_ton_per_day = (supply >= 120) ? 8 : (supply >= 6) ? 3.5 : 2.4;
-  const boiler_fuel_ton_per_day = (supply >= 120) ? 8 : (supply >= 6) ? 3.5 : 2.4;
-  const human_resource_per_day = 12000;
-  const maintenance_per_day = 10000;
-  const misc_per_day = 3000;
-  const cbg_trips_per_day = 6;
-  //console.log(boiler_fuel_ton_per_day)
-  // PRODUCTIONS
-  const producedCNG_kg_per_day = (r.totalWorkingCapacity || 0) * 1000; // TPD to Kg
+  // CBG production from working capacity (rounded per Excel ROUNDDOWN formula)
+  const producedCNG_kg_per_day = r.working_capacity_kg || 0;
+
+  // Electricity — Excel ratio: 10,400 kWh per 12,000 kg CBG (P&L F17 / F13)
+  const ELEC_KWH_PER_KG_CBG  = 10400 / 12000;
+  const electricity_kwh_per_day = Math.round(producedCNG_kg_per_day * ELEC_KWH_PER_KG_CBG);
+
+  // Solid manure — dry biproduct from SLS (Mass Balance M11 formula)
+  const solid_manure_ton_per_day = r.dry_biproduct_tpd || 0;
+
+  // Boiler fuel — Excel formula: Mass Balance H42 / 1000 / 1.8
+  //   H42 = seasonal-weighted average boiler fuel (kg/day)
+  //   H40 = (C88 * ΔT_winter) / (η × NCV)  where C88 = total TS / target TS% × 1.1896 factor
+  //   Simplified: sumDry (tons TS) × 11896 × avg_ΔT / (0.75 × 4000 × 1000) / 1.8
+  const AVG_DELTA_T          = (37*90 + 23*90 + 27*185) / 365; // = 28.479°C weighted seasonal
+  const boiler_fuel_ton_per_day = r.sumDry > 0
+    ? (r.sumDry * 11896 * AVG_DELTA_T) / (0.75 * 4000 * 1.8 * 1000)
+    : 0;
+
+  // Fixed daily costs from Excel P&L
+  const human_resource_per_day = 30000;   // P&L I26 = H26 = ₹30,000/day
+  const maintenance_per_day    = 8000;    // P&L I27 = H27 = ₹8,000/day
+  const misc_per_day           = 3000;    // P&L I29 = H29 = ₹3,000/day
 
   // INCOME
   const incomeCNG = producedCNG_kg_per_day * priceCNG; // ₹/day
@@ -487,12 +541,14 @@ function calculatePL(){
   const totalIncome = incomeCNG + incomeManure + incomeCarbon;
 
   // EXPENSES
-  const electricityCost = electricity_kwh_per_day * electricityRate;
-  const boilerCost = boiler_fuel_ton_per_day * boilerRate;
-  const rawMaterialCost = r.totalRawCost || 0; // ₹/day
-  const transportRawCost = r.totalTransportCost || 0;
-  const cbgTransportCost = cbg_trips_per_day * cbgTransport;
-  const totalExpenditure = electricityCost + boilerCost + rawMaterialCost + transportRawCost + human_resource_per_day + maintenance_per_day + cbgTransportCost + misc_per_day;
+  const electricityCost   = electricity_kwh_per_day * electricityRate;
+  const boilerCost        = boiler_fuel_ton_per_day * boilerRate;
+  const rawMaterialCost   = r.totalRawCost || 0;
+  const transportRawCost  = r.totalTransportCost || 0;
+  // CBG transport: ₹/kg × produced kg/day  (Excel P&L I28 = H28 × F13 = rate × working_capacity_kg)
+  const cbgTransportCost  = cbgTransport * producedCNG_kg_per_day;
+  const totalExpenditure  = electricityCost + boilerCost + rawMaterialCost + transportRawCost
+                          + human_resource_per_day + maintenance_per_day + cbgTransportCost + misc_per_day;
 
   // PROFITS
   const dailyProfit = totalIncome - totalExpenditure;
@@ -525,10 +581,12 @@ function calculatePL(){
   document.getElementById('exp-rate-trans').textContent = '₹ ' + (r.propTransportCost||0).toFixed(2) + '/Ton';
   document.getElementById('exp-trans').textContent = fmtMoney(r.totalTransportCost || 0);
 
-  document.getElementById('exp-hr').textContent = fmtMoney(human_resource_per_day);
-  document.getElementById('exp-maint').textContent = fmtMoney(maintenance_per_day);
+  document.getElementById('exp-rate-hr').textContent   = '₹ ' + human_resource_per_day.toLocaleString('en-IN') + ' per Day';
+  document.getElementById('exp-hr').textContent        = fmtMoney(human_resource_per_day);
+  document.getElementById('exp-rate-maint').textContent = '₹ ' + maintenance_per_day.toLocaleString('en-IN') + ' per Day';
+  document.getElementById('exp-maint').textContent     = fmtMoney(maintenance_per_day);
 
-  document.getElementById('exp-rate-cbg').textContent = '₹ ' + cbgTransport.toFixed(2) + ' per trip';
+  document.getElementById('exp-rate-cbg').textContent = '₹ ' + cbgTransport.toFixed(2) + '/kg';
   document.getElementById('exp-cbg').textContent = fmtMoney(cbgTransportCost);
 
   document.getElementById('exp-rate-misc').textContent = '₹ '+misc_per_day.toFixed(2) + ' per Day';
